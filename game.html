@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>填字游戏</title>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --accent-color: #f72585;
+        --light-color: #f8f9fa;
+        --dark-color: #212529;
+        --success-color: #4CAF50;
+        --danger-color: #f44336;
+        --warning-color: #ff9800;
+        --info-color: #2196F3;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Noto Sans SC', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: var(--dark-color);
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      
+      .header h1 {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      }
+      
+      .header p {
+        font-size: 1.1rem;
+        color: var(--dark-color);
+        opacity: 0.8;
+      }
+      
+      .card {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: var(--transition);
+      }
+      
+      .card:hover {
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-5px);
+      }
+      
+      .upload-box {
+        width: 100%;
+        padding: 20px;
+        text-align: center;
+      }
+      
+      .upload-btn {
+        padding: 10px 20px;
+        background-color: var(--success-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 16px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .upload-btn i {
+        margin-right: 8px;
+      }
+      
+      .upload-btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+      }
+      
+      .control-panel {
+        width: 100%;
+        padding: 20px;
+      }
+      
+      .panel-title {
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        text-align: center;
+        font-weight: 500;
+      }
+      
+      .undo-btn {
+        padding: 10px 20px;
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 15px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      
+      .undo-btn i {
+        margin-right: 8px;
+      }
+      
+      .undo-btn:hover {
+        background-color: #d32f2f;
+        transform: translateY(-2px);
+      }
+      
+      .input-group {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .input-group label {
+        margin-right: 10px;
+        font-weight: 500;
+        min-width: 80px;
+      }
+      
+      .input-group input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        width: 100%;
+        font-size: 16px;
+        transition: var(--transition);
+      }
+      
+      .input-group input[type="text"]:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+      }
+      
+      .radio-group {
+        margin: 15px 0;
+        display: flex;
+        justify-content: center;
+      }
+      
+      .radio-option {
+        margin: 0 10px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .radio-option input[type="radio"] {
+        margin-right: 5px;
+      }
+      
+      .color-input {
+        display: flex;
+        align-items: center;
+      }
+      
+      .color-input input[type="color"] {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        background: none;
+        padding: 0;
+        overflow: hidden;
+      }
+      
+      .fill-btn {
+        padding: 10px 20px;
+        background-color: var(--info-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      
+      .fill-btn i {
+        margin-right: 8px;
+      }
+      
+      .fill-btn:hover {
+        background-color: #0b7dda;
+        transform: translateY(-2px);
+      }
+      
+      .selected-cell {
+        background-color: rgba(33, 150, 243, 0.3) !important;
+      }
+      
+      .wrap {
+        text-align: center;
+        margin-top: 20px;
+      }
+      
+      .main {
+        position: relative;
+        width: 450px;
+        height: 450px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+      }
+      
+      .block {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 450px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      
+      .row {
+        width: 100%;
+        height: 45px;
+        flex-shrink: 0;
+        flex-grow: 1;
+        display: flex;
+      }
+      
+      .block .item {
+        width: 10%;
+        height: 45px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        /* border: 1px solid #eee; */
+        box-sizing: border-box;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+      }
+      
+      .block .item:hover {
+        background-color: rgba(67, 97, 238, 0.1);
+      }
+      
+      .block .item:focus {
+        outline: none;
+        background-color: rgba(67, 97, 238, 0.2);
+      }
+      
+      .block .item::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 5%;
+        width: 90%;
+        height: 1px;
+        background-color: #eee;
+      }
+      
+      .btn {
+        padding: 10px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .btn i {
+        margin-right: 8px;
+      }
+      
+      .btn:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-2px);
+      }
+      
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        
+        .main {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 1/1;
+        }
+        
+        .block {
+          height: 100%;
+        }
+        
+        .block .item {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>填字游戏</h1>
+        <p>创建自己的填字游戏，上传背景图片，填入文字，生成并保存</p>
+      </div>
+      
+      <div class="card">
+        <div class="upload-box">
+          <input type="file" id="fileInput" accept="image/*" style="display: none;">
+          <button class="upload-btn" id="uploadBtn"><i class="fas fa-upload"></i> 上传背景图片</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="control-panel">
+          <h3 class="panel-title">控制面板</h3>
+          
+          <button class="undo-btn" id="undoBtn"><i class="fas fa-undo"></i> 撤销</button>
+          
+          <div class="input-group">
+            <label for="wordInput">输入词语:</label>
+            <input type="text" id="wordInput" placeholder="请输入要填入的词语">
+          </div>
+          
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="horizontal" name="direction" value="horizontal" checked>
+              <label for="horizontal">横向</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="vertical" name="direction" value="vertical">
+              <label for="vertical">竖向</label>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label for="colorPicker">字体颜色:</label>
+            <div class="color-input">
+              <input type="color" id="colorPicker" value="#000000">
+            </div>
+          </div>
+          
+          <button class="fill-btn" id="fillBtn"><i class="fas fa-pen"></i> 填入词语</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="wrap">
+          <div class="main" id="canvas">
+            <img id="image" src=""/>
+            <div class="block" id="word"></div>
+          </div>
+          <button class="btn" id="btn"><i class="fas fa-image"></i> 生成图片</button>
+        </div>
+      </div>
+    </div>
+    
+    <script type="text/javascript">
+      // 初始化格子
+      const wordDom = document.getElementById('word');
+      let innerHtml = '';
+      for (let i = 0; i < 10; i++) {
+        let row = '<div class="row">';
+        for (let j = 0; j < 10; j++) {
+          row = row + `<div class="item" data-row="${i}" data-col="${j}" contenteditable="true"></div>`;
+        }
+        row = row + '</div>';
+        innerHtml = innerHtml + row;
+      }
+      wordDom.innerHTML = innerHtml;
+      
+      // 文件上传功能
+      const uploadBtn = document.getElementById('uploadBtn');
+      const fileInput = document.getElementById('fileInput');
+      const image = document.getElementById('image');
+      
+      uploadBtn.addEventListener('click', function() {
+        fileInput.click();
+      });
+      
+      fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            image.src = e.target.result; // 设置base64编码的图片
+          };
+          reader.readAsDataURL(file); // 将文件读取为Data URL (base64)
+        }
+      });
+  
+      // 新增功能实现
+      let selectedCell = null;
+      let selectedRow = -1;
+      let selectedCol = -1;
+      let currentColor = "#000000";
+      let history = [];
+      
+      // 获取所有格子元素
+      const cells = document.querySelectorAll('.item');
+      
+      // 为每个格子添加点击事件
+      cells.forEach(cell => {
+        cell.addEventListener('click', function(e) {
+          // 移除之前选中格子的高亮
+          if (selectedCell) {
+            selectedCell.classList.remove('selected-cell');
+          }
+          
+          // 设置当前选中的格子
+          selectedCell = this;
+          selectedRow = parseInt(this.getAttribute('data-row'));
+          selectedCol = parseInt(this.getAttribute('data-col'));
+          
+          // 高亮显示当前选中的格子
+          this.classList.add('selected-cell');
+          
+          // 阻止冒泡，防止触发contenteditable
+          e.stopPropagation();
+        });
+      });
+      
+      // 获取UI元素
+      const wordInput = document.getElementById('wordInput');
+      const fillBtn = document.getElementById('fillBtn');
+      const undoBtn = document.getElementById('undoBtn');
+      const colorPicker = document.getElementById('colorPicker');
+      
+      // 颜色选择器事件
+      colorPicker.addEventListener('change', function() {
+        currentColor = this.value;
+        
+        // 更新所有已填入文字的颜色
+        cells.forEach(cell => {
+          // 只更改非空格子的颜色
+          if (cell.innerHTML.trim() !== '') {
+            cell.style.color = currentColor;
+          }
+        });
+      });
+      
+      // 填入词语按钮事件
+      fillBtn.addEventListener('click', function() {
+        if (selectedRow === -1 || selectedCol === -1) {
+          showNotification('请先点击一个格子作为起始位置', 'warning');
+          return;
+        }
+        
+        const word = wordInput.value.trim();
+        if (!word) {
+          showNotification('请输入要填入的词语', 'warning');
+          return;
+        }
+        
+        // 获取选择的方向
+        const direction = document.querySelector('input[name="direction"]:checked').value;
+        
+        // 保存当前状态到历史记录
+        saveCurrentState();
+        
+        // 填入词语
+        fillWord(word, selectedRow, selectedCol, direction, currentColor);
+        
+        // 清空输入框
+        wordInput.value = '';
+        
+        showNotification('词语填入成功', 'success');
+      });
+      
+      // 撤销按钮事件
+      undoBtn.addEventListener('click', function() {
+        if (history.length > 0) {
+          // 恢复到上一个状态
+          const lastState = history.pop();
+          restoreState(lastState);
+          showNotification('已撤销上一步操作', 'info');
+        } else {
+          showNotification('没有可撤销的操作', 'warning');
+        }
+      });
+      
+      // 保存当前状态到历史记录
+      function saveCurrentState() {
+        const state = [];
+        cells.forEach(cell => {
+          state.push({
+            row: parseInt(cell.getAttribute('data-row')),
+            col: parseInt(cell.getAttribute('data-col')),
+            content: cell.innerHTML,
+            color: cell.style.color
+          });
+        });
+        history.push(state);
+      }
+      
+      // 恢复到指定状态
+      function restoreState(state) {
+        state.forEach(cellState => {
+          const cell = document.querySelector(`.item[data-row="${cellState.row}"][data-col="${cellState.col}"]`);
+          if (cell) {
+            cell.innerHTML = cellState.content;
+            cell.style.color = cellState.color;
+          }
+        });
+      }
+      
+      // 填入词语函数
+      function fillWord(word, row, col, direction, color) {
+        const chars = word.split('');
+        
+        for (let i = 0; i < chars.length; i++) {
+          let currentRow = row;
+          let currentCol = col;
+          
+          if (direction === 'horizontal') {
+            currentCol = col + i;
+          } else {
+            currentRow = row + i;
+          }
+          
+          // 检查是否超出边界
+          if (currentRow >= 0 && currentRow < 10 && currentCol >= 0 && currentCol < 10) {
+            const cell = document.querySelector(`.item[data-row="${currentRow}"][data-col="${currentCol}"]`);
+            if (cell) {
+              cell.innerHTML = chars[i];
+              cell.style.color = color;
+            }
+          }
+        }
+      }
+      
+      // 通知函数
+      function showNotification(message, type) {
+        // 创建通知元素
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + type;
+        notification.innerHTML = message;
+        
+        // 设置样式
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '4px';
+        notification.style.color = 'white';
+        notification.style.zIndex = '1000';
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(20px)';
+        notification.style.transition = 'all 0.3s ease';
+        
+        // 设置不同类型的背景色
+        if (type === 'success') {
+          notification.style.backgroundColor = '#4CAF50';
+        } else if (type === 'warning') {
+          notification.style.backgroundColor = '#ff9800';
+        } else if (type === 'error') {
+          notification.style.backgroundColor = '#f44336';
+        } else if (type === 'info') {
+          notification.style.backgroundColor = '#2196F3';
+        }
+        
+        // 添加到页面
+        document.body.appendChild(notification);
+        
+        // 显示通知
+        setTimeout(() => {
+          notification.style.opacity = '1';
+          notification.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // 自动关闭
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          notification.style.transform = 'translateY(20px)';
+          
+          // 移除元素
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 3000);
+      }
+  
+      const btn = document.getElementById('btn');
+      btn.onclick = () => {
+        // 临时保存当前样式状态
+        const selectedCellBackup = selectedCell;
+        const cellBorders = [];
+        
+        // 移除选中格子的高亮效果
+        if (selectedCell) {
+          selectedCell.classList.remove('selected-cell');
+        }
+        
+        // 临时移除所有格子的边框
+        cells.forEach(cell => {
+          cellBorders.push(cell.style.border);
+          cell.style.border = 'none';
+        });
+        
+        // 显示加载提示
+        showNotification('正在生成图片...', 'info');
+        
+        // 生成图片
+        html2canvas(document.getElementById("canvas"), {
+          useCORS: true,
+          allowTaint: true,
+          logging: true,
+        }).then(canvas => {
+          const img = canvas.toDataURL("image/png");
+          // 创建一个链接元素
+          const a = document.createElement("a");
+          a.href = img;
+          // 指定下载的文件名
+          a.download = "填字答案.png";
+          // 模拟点击触发下载
+          a.click();
+          
+          // 恢复样式
+          if (selectedCellBackup) {
+            selectedCellBackup.classList.add('selected-cell');
+          }
+          
+          // 恢复所有格子的边框
+          cells.forEach((cell, index) => {
+            cell.style.border = cellBorders[index] || '1px solid #eee';
+          });
+          
+          showNotification('图片生成成功', 'success');
+        }).catch(error => {
+          console.error('图片生成失败:', error);
+          showNotification('图片生成失败', 'error');
+          
+          // 恢复样式
+          if (selectedCellBackup) {
+            selectedCellBackup.classList.add('selected-cell');
+          }
+          
+          // 恢复所有格子的边框
+          cells.forEach((cell, index) => {
+            cell.style.border = cellBorders[index] || '1px solid #eee';
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
