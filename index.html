@@ -1,2 +1,293 @@
-<a href="./CrosswordPuzzle.html" target="_blank">填字游戏</a>
-<a href="./sudokuhelper.html" target="_blank">数独助手</a>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI在线工具集</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --primary-dark: #2980b9;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --light-text: #666;
+            --lighter-text: #999;
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --border-color: #eaeaea;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+            padding: 1.5rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .site-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .site-description {
+            color: var(--light-text);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+            width: 100%;
+        }
+
+        .tools-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tool-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid var(--border-color);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .tool-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 160px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 3rem;
+            overflow: hidden;
+        }
+
+        .crossword-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .sudoku-icon {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .tool-details {
+            padding: 1.25rem;
+            flex: 1;
+        }
+
+        .tool-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .tool-description {
+            color: var(--light-text);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .tool-meta {
+            display: flex;
+            align-items: center;
+            color: var(--lighter-text);
+            font-size: 0.85rem;
+        }
+
+        .coming-soon {
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .coming-soon::after {
+            content: "即将推出";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        footer {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            text-align: center;
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .site-title {
+                font-size: 1.75rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 1rem;
+            }
+
+            .tool-icon {
+                height: 140px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .site-title {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="site-title">AI在线工具集</h1>
+            <p class="site-description">使用先进AI技术，为您提供实用、高效的在线工具</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="tools-section">
+            <h2 class="section-title">文字游戏工具</h2>
+            <div class="tools-grid">
+                <a href="./CrosswordPuzzle.html" class="tool-card">
+                    <div class="tool-icon crossword-icon">
+                        <span>拼</span>
+                    </div>
+                    <div class="tool-details">
+                        <h3 class="tool-title">填字游戏</h3>
+                        <p class="tool-description">经典填字游戏，挑战您的词汇量和思维能力，休闲娱乐的绝佳选择。</p>
+                        <div class="tool-meta">AI辅助生成 • 即刻体验</div>
+                    </div>
+                </a>
+
+                <a href="./sudokuhelper.html" class="tool-card">
+                    <div class="tool-icon sudoku-icon">
+                        <span>数</span>
+                    </div>
+                    <div class="tool-details">
+                        <h3 class="tool-title">数独助手</h3>
+                        <p class="tool-description">智能数独求解器，只需粘贴图片即可识别并解答数独难题，提供步骤指导。</p>
+                        <div class="tool-meta">OCR识别 • 自动求解</div>
+                    </div>
+                </a>
+
+                <!-- 预留位置，用于未来添加更多工具 -->
+                <!-- <a href="#" class="tool-card coming-soon">
+                    <div class="tool-icon">
+                        <span>敬</span>
+                    </div>
+                    <div class="tool-details">
+                        <h3 class="tool-title">敬请期待</h3>
+                        <p class="tool-description">更多精彩工具正在开发中，敬请期待！</p>
+                        <div class="tool-meta">开发中 • 即将上线</div>
+                    </div>
+                </a> -->
+            </div>
+        </section>
+
+        <!-- 可以根据需要添加更多分类 -->
+        <!-- <section class="tools-section">
+            <h2 class="section-title">AI创作工具</h2>
+            <div class="tools-grid">
+                <a href="#" class="tool-card coming-soon">
+                    <div class="tool-icon">
+                        <span>待</span>
+                    </div>
+                    <div class="tool-details">
+                        <h3 class="tool-title">敬请期待</h3>
+                        <p class="tool-description">更多精彩工具正在开发中，敬请期待！</p>
+                        <div class="tool-meta">开发中 • 即将上线</div>
+                    </div>
+                </a>
+            </div>
+        </section> -->
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>© 2024 AI在线工具集 | 使用Cursor AI辅助开发</p>
+        </div>
+    </footer>
+</body>
+</html>
