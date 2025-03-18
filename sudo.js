@@ -84,9 +84,19 @@ async function init() {
         .then((ret) => {
             session = ret;
             document.getElementById('onnxStatus').innerHTML = 'PaddleOCR 加载完成';
+            // 隐藏模型上传区域
+            const modelLoaderElement = document.querySelector('.model-loader');
+            if (modelLoaderElement) {
+                modelLoaderElement.style.display = 'none';
+            }
         })
         .catch((err) => {
             document.getElementById('onnxStatus').innerHTML = 'PaddleOCR 加载失败,请刷新页面重试';
+            // 显示模型上传区域
+            const modelLoaderElement = document.querySelector('.model-loader');
+            if (modelLoaderElement) {
+                modelLoaderElement.style.display = 'flex';
+            }
         });
 }
 
@@ -94,6 +104,13 @@ async function init() {
 function loadDefaultModel() {
     // 更新状态显示
     const statusElement = document.getElementById('onnxStatus');
+    const modelLoaderElement = document.querySelector('.model-loader');
+    
+    // 默认隐藏模型上传区域，等待远程加载结果
+    if (modelLoaderElement) {
+        modelLoaderElement.style.display = 'none';
+    }
+    
     if (statusElement) {
         statusElement.innerHTML = '正在尝试加载默认OCR模型...';
     }
@@ -105,6 +122,10 @@ function loadDefaultModel() {
                 if (statusElement) {
                     statusElement.innerHTML = '请上传OCR模型文件(.onnx)';
                 }
+                // 显示模型上传区域
+                if (modelLoaderElement) {
+                    modelLoaderElement.style.display = 'flex';
+                }
                 return null;
             }
             return response.blob();
@@ -113,12 +134,20 @@ function loadDefaultModel() {
             if (blob) {
                 window.modelPath = URL.createObjectURL(blob);
                 console.log('已从assets文件夹加载默认OCR模型');
+                // 成功加载远程模型，隐藏模型上传区域
+                if (modelLoaderElement) {
+                    modelLoaderElement.style.display = 'none';
+                }
             }
         })
         .catch(error => {
             console.error('加载默认OCR模型时出错:', error);
             if (statusElement) {
                 statusElement.innerHTML = '加载默认模型失败，请手动上传模型文件';
+            }
+            // 显示模型上传区域
+            if (modelLoaderElement) {
+                modelLoaderElement.style.display = 'flex';
             }
         });
 }
@@ -158,7 +187,11 @@ function checkPaddleOCRLoaded() {
 function resetWorkspace() {
     imageElm.src = '';
     rawImage.src = '';
+    const statusElm = document.getElementById('boardStatus');
     statusElm.innerHTML = '';
+    statusElm.style.backgroundColor = '';
+    statusElm.style.color = '';
+    
     // 清空整个画布
     const ctx = canvasElm.getContext('2d');
     ctx.clearRect(0, 0, canvasElm.width, canvasElm.height);
@@ -166,8 +199,10 @@ function resetWorkspace() {
 
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            cells[i][j].style.backgroundColor = null;
-            cells[i][j].textContent = null;
+            cells[i][j].style.backgroundColor = '';
+            cells[i][j].style.color = '';
+            cells[i][j].style.fontWeight = '';
+            cells[i][j].textContent = '';
             cells[i][j].contentEditable = true;
         }
     }
@@ -183,7 +218,7 @@ function isValidSudoku(cells) {
         for (let j = 0; j < 9; j++) {
             const cell = cells[i][j];
             const c = cell.textContent;
-            cell.style.backgroundColor = (cell.contentEditable == 'true') ? null : 'rgb(200,200,200)';
+            cell.style.backgroundColor = (cell.contentEditable == 'true') ? null : '#edf2f7';
             // 多字符 非数字字符
             if ((c.length > 1) || (c.charCodeAt() < 49) || (c.charCodeAt() > 57)) {
                 valid = false;
@@ -217,7 +252,7 @@ function isValidSudoku(cells) {
         }
     }
     duplicated.forEach((e) => {
-        cells[e.x][e.y].style.backgroundColor = 'red';
+        cells[e.x][e.y].style.backgroundColor = 'rgba(231, 76, 60, 0.3)'; // 更柔和的红色
     });
     return valid;
 };
@@ -353,7 +388,13 @@ function fillIn(board, cells) {
             if (board[i][j] !== '0') {
                 cells[i][j].textContent = board[i][j];
                 cells[i][j].contentEditable = false;
-                cells[i][j].style.backgroundColor = 'rgb(200,200,200)';
+                cells[i][j].style.backgroundColor = '#edf2f7';
+                cells[i][j].style.fontWeight = '600';
+                cells[i][j].style.color = '#2c3e50';
+            } else {
+                cells[i][j].contentEditable = true;
+                cells[i][j].style.backgroundColor = 'white';
+                cells[i][j].style.color = '#3498db';
             }
         }
     }
@@ -381,7 +422,16 @@ window.genOutputPic = function () {
 };
 
 window.checkAnswer = function () {
-    statusElm.innerHTML = isValidSudoku(cells) ? "答案正确" : "答案不正确";
+    const statusElm = document.getElementById('boardStatus');
+    if (isValidSudoku(cells)) {
+        statusElm.innerHTML = "答案正确";
+        statusElm.style.backgroundColor = "rgba(46, 204, 113, 0.2)"; // 绿色背景
+        statusElm.style.color = "#27ae60";
+    } else {
+        statusElm.innerHTML = "答案不正确";
+        statusElm.style.backgroundColor = "rgba(231, 76, 60, 0.2)"; // 红色背景
+        statusElm.style.color = "#c0392b";
+    }
 }
 
 window.solveSudoku = function () {
@@ -395,9 +445,13 @@ window.solveSudoku = function () {
         }
     }
     
+    const statusElm = document.getElementById('boardStatus');
+    
     // 检查当前数独是否有效
     if (!isValidForSolving(board)) {
         statusElm.innerHTML = "当前数独状态无效，无法求解";
+        statusElm.style.backgroundColor = "rgba(231, 76, 60, 0.2)"; // 红色背景
+        statusElm.style.color = "#c0392b";
         return;
     }
     
@@ -408,13 +462,17 @@ window.solveSudoku = function () {
             for (let j = 0; j < 9; j++) {
                 if (cells[i][j].textContent === "") {
                     cells[i][j].textContent = board[i][j].toString();
-                    cells[i][j].style.backgroundColor = "lightgreen";
+                    cells[i][j].style.backgroundColor = "rgba(46, 204, 113, 0.2)"; // 柔和的绿色
                 }
             }
         }
         statusElm.innerHTML = "数独已成功解答";
+        statusElm.style.backgroundColor = "rgba(46, 204, 113, 0.2)"; // 绿色背景
+        statusElm.style.color = "#27ae60";
     } else {
         statusElm.innerHTML = "无法解答当前数独";
+        statusElm.style.backgroundColor = "rgba(231, 76, 60, 0.2)"; // 红色背景
+        statusElm.style.color = "#c0392b";
     }
 }
 
@@ -547,7 +605,11 @@ document.getElementById('pasteArea').addEventListener('paste', function (e) {
                 const blob = items[i].getAsFile();
                 rawImage.src = URL.createObjectURL(blob);
                 imageElm.src = rawImage.src;
+                
+                const statusElm = document.getElementById('boardStatus');
                 statusElm.innerHTML = "处理中...";
+                statusElm.style.backgroundColor = "rgba(52, 152, 219, 0.2)"; // 蓝色背景
+                statusElm.style.color = "#2980b9";
                 break
             }
         }
@@ -556,7 +618,16 @@ document.getElementById('pasteArea').addEventListener('paste', function (e) {
 
 document.getElementById('modelFile').addEventListener('change', function (e) {
     if ((e.target.files) && (e.target.files[0].name.endsWith(".onnx"))) {
+        const statusElement = document.getElementById('onnxStatus');
+        if (statusElement) {
+            statusElement.innerHTML = '正在加载本地OCR模型...';
+        }
+        
         window.modelPath = URL.createObjectURL(e.target.files[0]);
+        // 本地模型文件已选择，触发初始化
+        if (window.ort) {
+            init();
+        }
     }
 });
 

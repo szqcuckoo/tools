@@ -1,118 +1,275 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
     <meta charset="utf-8">
-    <title>Sudoku Helper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独解题助手</title>
     <script async src="https://registry.npmmirror.com/onnxruntime-web/1.18.0/files/dist/ort.min.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@opencv.js/wasm@4.4.0/opencv.min.js"></script>
     <style>
-        .container {
-            display: flex;
-            align-items: stretch;
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --light-bg: #f5f7fa;
+            --border-color: #ddd;
+            --border-dark: #888;
+            --success-color: #2ecc71;
+            --highlight-color: #f1c40f;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .container div {
-            margin-left: 10px;
-            margin-right: 10px;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        .container img {
-            width: auto;
-            height: auto;
-            max-width: 50%;
-            /* 图片最大宽度不超过容器宽度 */
-            max-height: 100%;
-            margin-left: 10px;
-            margin-top: 10px;
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-bg);
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        /* 确保表格宽度不超过其容器 */
-        .container table {
-            width: 300px;
-            height: 300px;
-            border-collapse: collapse;
-            /* height: 60%; */
-            table-layout: fixed;
-            margin-top: 10px;
-            margin-left: 10px;
-            margin-right: 10px;
+        .app-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .container td,
-        .container th {
-            margin: 0px;
+        .app-header {
             text-align: center;
-            /* 水平居中 */
-            vertical-align: middle;
-            /* 垂直居中 */
-            padding: 2px;
-
-            border: 2px solid #aaa;
-            height: calc(100% / 9);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        tr:nth-child(1),
-        tr:nth-child(4),
-        tr:nth-child(7) {
-            border-top: 3px solid #000;
+        .app-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
         }
 
-        tr:nth-child(3),
-        tr:nth-child(6),
-        tr:nth-child(9) {
-            border-bottom: 3px solid #000;
+        .status-panel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        td:nth-child(1),
-        td:nth-child(4),
-        td:nth-child(7) {
-            border-left: 3px solid #000;
-            /* 加粗的右侧边框 */
+        .status-indicator {
+            padding: 6px 12px;
+            background-color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: var(--shadow);
         }
 
-        td:nth-child(3),
-        td:nth-child(6),
-        td:nth-child(9) {
-            border-right: 3px solid #000;
-            /* 加粗的右侧边框 */
+        .model-loader {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 15px;
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .model-loader label {
+            margin-right: 10px;
+            font-weight: 500;
+        }
+
+        .model-loader input[type="file"] {
+            background-color: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            flex-grow: 1;
         }
 
         .toolbar {
             display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
         }
 
-        .toolbar label,
-        .toolbar input,
-        .toolbar button,
-        .toolbar div {
-            margin: 10px;
+        .paste-area {
+            padding: 10px 15px;
+            border: 2px dashed var(--border-color);
+            border-radius: 6px;
+            flex-grow: 1;
+            height: 45px;
+            background-color: white;
+            transition: border-color 0.2s;
+        }
+
+        .paste-area:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        button {
+            padding: 10px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .content-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        #sudokuBoard {
+            width: 360px;
+            height: 360px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #sudokuBoard td {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 20px;
+            font-weight: 500;
+            position: relative;
+            transition: background-color 0.2s;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+        }
+
+        #sudokuBoard td:focus {
+            outline: none;
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        /* 加粗边框 */
+        #sudokuBoard tr:nth-child(3n) td {
+            border-bottom: 2px solid var(--border-dark);
+        }
+
+        #sudokuBoard tr:first-child td {
+            border-top: 2px solid var(--border-dark);
+        }
+
+        #sudokuBoard td:nth-child(3n) {
+            border-right: 2px solid var(--border-dark);
+        }
+
+        #sudokuBoard td:first-child {
+            border-left: 2px solid var(--border-dark);
+        }
+
+        .image-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            background-color: white;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: var(--shadow);
+            min-height: 360px;
+        }
+
+        #inputImage {
+            max-width: 100%;
+            max-height: 340px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        #boardStatus {
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-left: auto;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+            }
+
+            #sudokuBoard {
+                width: 100%;
+                max-width: 360px;
+                margin: 0 auto;
+            }
+
+            .image-container {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="toolbar">
-        <div id="status">OpenCV.js 加载中...</div>
-        <div id="onnxStatus">PaddleOCR 加载中...</div>
-        <label for="modelFile">加载本地OCR模型文件:</label>
-        <input type="file" id="modelFile" name="modelFile" />
-    </div>
-    <div>
+    <div class="app-container">
+        <div class="app-header">
+            <h1 class="app-title">数独解题助手</h1>
+            <p>粘贴数独图片，自动识别并解题</p>
+        </div>
+
+        <div class="status-panel">
+            <div id="status" class="status-indicator">OpenCV.js 加载中...</div>
+            <div id="onnxStatus" class="status-indicator">PaddleOCR 加载中...</div>
+        </div>
+
+        <div class="model-loader">
+            <label for="modelFile">加载本地OCR模型文件:</label>
+            <input type="file" id="modelFile" name="modelFile" />
+        </div>
+
         <div class="toolbar">
-            <input id="pasteArea" contenteditable="true" placeholder="粘贴图片到这里"
-                style="width: 300px; height: 30px; border: 1px solid #ccc;"></input>
+            <input id="pasteArea" class="paste-area" contenteditable="true" placeholder="点击此处粘贴数独图片"></input>
             <button onclick="genOutputPic()">答案填图</button>
             <button onclick="solveSudoku()">解答数独</button>
             <button onclick="checkAnswer()">检查答案</button>
-            <p id="boardStatus"></p>
+            <div id="boardStatus"></div>
         </div>
 
-        <div class="container">
+        <div class="content-container">
             <table id="sudokuBoard">
                 <!-- 表格内容将由JavaScript动态生成 -->
             </table>
-            <img id="inputImage" crossorigin="anonymous" />
+            <div class="image-container">
+                <img id="inputImage" crossorigin="anonymous" alt="数独图片" />
+            </div>
         </div>
         <canvas id="canvasImage" hidden></canvas>
     </div>
