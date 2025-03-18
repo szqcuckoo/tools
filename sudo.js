@@ -90,9 +90,65 @@ async function init() {
         });
 }
 
+// 尝试从assets文件夹加载默认的paddle.onnx模型
+function loadDefaultModel() {
+    // 更新状态显示
+    const statusElement = document.getElementById('onnxStatus');
+    if (statusElement) {
+        statusElement.innerHTML = '正在尝试加载默认OCR模型...';
+    }
+    
+    fetch('./assets/paddle.onnx')
+        .then(response => {
+            if (!response.ok) {
+                console.warn('无法从assets文件夹加载默认OCR模型，请手动上传模型文件');
+                if (statusElement) {
+                    statusElement.innerHTML = '请上传OCR模型文件(.onnx)';
+                }
+                return null;
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            if (blob) {
+                window.modelPath = URL.createObjectURL(blob);
+                console.log('已从assets文件夹加载默认OCR模型');
+            }
+        })
+        .catch(error => {
+            console.error('加载默认OCR模型时出错:', error);
+            if (statusElement) {
+                statusElement.innerHTML = '加载默认模型失败，请手动上传模型文件';
+            }
+        });
+}
+
+// 页面加载完成后尝试加载默认模型
+document.addEventListener('DOMContentLoaded', function() {
+    // 只有当没有模型路径时才尝试加载默认模型
+    if (!window.modelPath) {
+        loadDefaultModel();
+    }
+    
+    // 确保开始检查OCR加载状态
+    if (!window.checkOCRInterval) {
+        window.checkOCRInterval = setInterval(function() {
+            if (window.ort) {
+                clearInterval(window.checkOCRInterval);
+                checkPaddleOCRLoaded();
+            }
+        }, 100);
+    }
+});
+
 function checkPaddleOCRLoaded() {
     if ((window.ort) && (window.modelPath)) {
         init();
+    } else if (window.ort && !window.modelPath) {
+        // 如果onnxruntime已加载但没有模型路径，尝试加载默认模型
+        loadDefaultModel();
+        // 短暂延迟后再次检查
+        setTimeout(checkPaddleOCRLoaded, 500);
     } else {
         // 等待一段时间后再次检查
         setTimeout(checkPaddleOCRLoaded, 100);
