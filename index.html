@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
     <style>
         :root {
-            --primary-color: #3498db;
-            --primary-dark: #2980b9;
+            --primary-color: #55cc86;
+            --primary-dark: #276b97;
             --accent-color: #e74c3c;
             --text-color: #333;
             --light-text: #666;
@@ -116,19 +116,18 @@
             align-items: center;
             justify-content: center;
             height: 160px;
-            background-color: var(--primary-color);
             color: white;
             font-size: 3rem;
             overflow: hidden;
         }
 
-        .crossword-icon {
+        /* .crossword-icon {
             background: linear-gradient(135deg, #3498db, #2980b9);
         }
 
         .sudoku-icon {
             background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
+        } */
 
         .tool-details {
             padding: 1.25rem;
@@ -221,18 +220,18 @@
 <body>
     <header>
         <div class="header-content">
-            <h1 class="site-title">AI在线工具集</h1>
+            <h1 class="site-title">本页面全部由Cursor生成</h1>
             <p class="site-description">使用先进AI技术，为您提供实用、高效的在线工具</p>
         </div>
     </header>
 
     <main>
         <section class="tools-section">
-            <h2 class="section-title">文字游戏工具</h2>
+            <h2 class="section-title">阡陌活动工具</h2>
             <div class="tools-grid">
                 <a href="./CrosswordPuzzle.html" class="tool-card">
                     <div class="tool-icon crossword-icon">
-                        <span>拼</span>
+                        <span>填字</span>
                     </div>
                     <div class="tool-details">
                         <h3 class="tool-title">填字游戏</h3>
@@ -243,12 +242,23 @@
 
                 <a href="./sudokuhelper.html" class="tool-card">
                     <div class="tool-icon sudoku-icon">
-                        <span>数</span>
+                        <span>数独</span>
                     </div>
                     <div class="tool-details">
                         <h3 class="tool-title">数独助手</h3>
                         <p class="tool-description">智能数独求解器，只需粘贴图片即可识别并解答数独难题，提供步骤指导。</p>
                         <div class="tool-meta">OCR识别 • 自动求解</div>
+                    </div>
+                </a>
+
+                <a href="./world-clock.html" class="tool-card">
+                    <div class="tool-icon">
+                        <span>时间</span>
+                    </div>
+                    <div class="tool-details">
+                        <h3 class="tool-title">世界时钟</h3>
+                        <p class="tool-description">全球时钟，随时随地查看世界各地的时间，方便快捷。</p>
+                        <div class="tool-meta">全球时钟 • 即刻体验</div>
                     </div>
                 </a>
 
@@ -289,5 +299,48 @@
             <p>© 2024 AI在线工具集 | 使用Cursor AI辅助开发</p>
         </div>
     </footer>
+
+    <script>
+        // 为每个tool-icon生成随机渐变背景色
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有tool-icon元素
+            const toolIcons = document.querySelectorAll('.tool-icon');
+            
+            // 为每个元素设置随机背景色
+            toolIcons.forEach(icon => {
+                // 生成随机的、不刺眼的渐变背景色
+                const gradient = generatePleasantGradient();
+                icon.style.background = gradient;
+            });
+            
+            // 生成柔和的渐变背景色函数
+            function generatePleasantGradient() {
+                // 生成柔和颜色的HSL值范围
+                // 色相: 完整范围 0-360
+                // 饱和度: 30%-70% 避免过于灰暗或过于鲜艳
+                // 亮度: 40%-75% 避免过暗或过亮
+                
+                // 生成第一个颜色
+                const hue1 = Math.floor(Math.random() * 360);
+                const saturation1 = Math.floor(30 + Math.random() * 40);
+                const lightness1 = Math.floor(40 + Math.random() * 35);
+                
+                // 生成第二个颜色 (与第一个颜色相差30-90度的色相，确保渐变和谐)
+                const hueDiff = 30 + Math.floor(Math.random() * 60);
+                const hue2 = (hue1 + hueDiff) % 360;
+                const saturation2 = Math.floor(30 + Math.random() * 40);
+                const lightness2 = Math.floor(40 + Math.random() * 35);
+                
+                // 构造渐变字符串
+                const color1 = `hsl(${hue1}, ${saturation1}%, ${lightness1}%)`;
+                const color2 = `hsl(${hue2}, ${saturation2}%, ${lightness2}%)`;
+                
+                // 随机角度的渐变
+                const angle = Math.floor(Math.random() * 360);
+                
+                return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+            }
+        });
+    </script>
 </body>
 </html>

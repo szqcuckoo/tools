@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界时钟 | World Clock | 世界時計</title>
+    <!-- 使用dayjs库及其插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/plugin/utc.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/plugin/timezone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/plugin/localizedFormat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/locale/zh-cn.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/locale/en.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/locale/ja.js"></script>
+    <!-- 引入Google字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #f39c12;
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --card-bg: #fff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --header-bg: #fff;
+            --button-bg: #e9ecef;
+            --button-text: #333;
+            --button-hover: #dadce0;
+            --transition-time: 0.3s;
+            --clock-size: 3.5rem;
+            --logo-font: 'Dancing Script', cursive;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4ea8de;
+            --secondary-color: #2ecc71;
+            --accent-color: #e67e22;
+            --text-color: #f1f1f1;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --header-bg: #1e1e1e;
+            --button-bg: #333;
+            --button-text: #f1f1f1;
+            --button-hover: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color var(--transition-time) ease, 
+                        color var(--transition-time) ease,
+                        transform var(--transition-time) ease,
+                        box-shadow var(--transition-time) ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Hiragino Kaku Gothic Pro', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background var(--transition-time) ease, 
+                        color var(--transition-time) ease;
+        }
+        
+        header {
+            background-color: var(--header-bg);
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--logo-font);
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        button, select {
+            background-color: var(--button-bg);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            cursor: pointer;
+            color: var(--button-text);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover, select:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+        }
+
+        button:active, select:active {
+            transform: translateY(0);
+        }
+
+        /* 点击效果动画 */
+        @keyframes buttonClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        button.clicked {
+            animation: buttonClick 0.3s ease;
+        }
+
+        .icon {
+            display: inline-block;
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: currentColor;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 按钮背景样式 */
+        .button-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.15;
+            transition: opacity 0.3s ease, transform 0.5s ease;
+            border-radius: inherit;
+        }
+
+        button:hover .button-bg {
+            opacity: 0.25;
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .button-bg {
+            opacity: 0.25;
+        }
+
+        [data-theme="dark"] button:hover .button-bg {
+            opacity: 0.35;
+            transform: scale(1.05);
+        }
+
+        /* 按钮焦点效果 */
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        button:focus .button-bg {
+            opacity: 0.3;
+        }
+
+        .container {
+            margin-top: 7rem;
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-areas:
+                "japan uk china usa canada";
+            gap: 2rem;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            margin-bottom: 3rem;
+        }
+
+        .clock-card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 220px;
+            max-width: 280px;
+            width: 100%;
+            aspect-ratio: 3/4;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        [data-theme="dark"] .clock-card {
+            background-color: rgba(30, 30, 30, 0.8);
+        }
+
+        [data-theme="light"] .clock-card {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .clock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow), 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .clock-card.china {
+            grid-area: china;
+        }
+
+        .clock-card.usa {
+            grid-area: usa;
+        }
+
+        .clock-card.japan {
+            grid-area: japan;
+        }
+
+        .clock-card.uk {
+            grid-area: uk;
+        }
+
+        .clock-card.canada {
+            grid-area: canada;
+        }
+
+        .country-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time {
+            font-size: var(--clock-size);
+            font-weight: 300;
+            margin: 0.5rem 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 添加新的时间样式 */
+        .time-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            gap: 0.3rem;
+        }
+
+        .time-unit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #00a9ff;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            width: 3.8rem;
+            height: 3.8rem;
+            margin: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .time-separator {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: #00a9ff;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+            min-height: 2.8rem;
+        }
+
+        .timezone {
+            font-size: 0.8rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-areas:
+                    "japan uk china"
+                    "usa canada .";
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-areas:
+                    "japan uk"
+                    "china usa"
+                    "canada .";
+                gap: 1.5rem;
+            }
+            
+            .clock-card {
+                max-width: none;
+                width: 100%;
+                min-width: 200px;
+            }
+            
+            .time-unit {
+                width: 3.5rem;
+                height: 3.5rem;
+                font-size: 2.2rem;
+            }
+            
+            .time-separator {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "china"
+                    "japan"
+                    "usa"
+                    "uk"
+                    "canada";
+                padding: 1rem;
+                margin-top: 5rem;
+            }
+            
+            .clock-card {
+                min-width: auto;
+                max-width: none;
+                width: 100%;
+                aspect-ratio: auto;
+                padding: 1.5rem;
+            }
+            
+            .clock-card.china {
+                order: 0;
+            }
+            
+            .controls {
+                gap: 0.5rem;
+            }
+            
+            button, select {
+                width: 2.2rem;
+                height: 2.2rem;
+                padding: 0.4rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            header {
+                padding: 0.8rem;
+            }
+            
+            .time-unit {
+                width: 3.2rem;
+                height: 3.2rem;
+                font-size: 1.8rem;
+            }
+            
+            .time-separator {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .time-unit {
+                width: 2.8rem;
+                height: 2.8rem;
+                font-size: 1.5rem;
+            }
+            
+            .time-separator {
+                font-size: 1.5rem;
+            }
+            
+            .clock-card {
+                padding: 1rem;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .time-update {
+            animation: pulse 0.5s ease;
+        }
+
+        /* 添加新的时间更新动画 */
+        @keyframes timeUpdate {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .time-unit.update {
+            animation: timeUpdate 0.5s ease;
+        }
+
+        /* 背景切换动画 */
+        @keyframes bgFade {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        body.bg-transition {
+            animation: bgFade 1s ease;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--card-bg);
+            min-width: 120px;
+            box-shadow: var(--card-shadow);
+            border-radius: 0.5rem;
+            z-index: 1;
+            margin-top: 0.5rem;
+            padding: 0.3rem 0;
+        }
+
+        .dropdown-content button {
+            width: 100%;
+            height: auto;
+            text-align: left;
+            padding: 0.7rem 1rem;
+            border-radius: 0.3rem;
+            display: block;
+            margin: 0.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+
+        .flag-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            World Clock
+        </div>
+        <div class="controls">
+            <button id="bg-toggle" title="更换背景 | Change Background | 背景変更">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M19,11.5C19,11.5 17,13.67 17,15A2,2 0 0,0 19,17A2,2 0 0,0 21,15C21,13.67 19,11.5 19,11.5M5.21,10L10,5.21L14.79,10M16.56,8.94L7.62,0L6.21,1.41L8.59,3.79L3.44,8.94C2.85,9.5 2.85,10.47 3.44,11.06L8.94,16.56C9.23,16.85 9.62,17 10,17C10.38,17 10.77,16.85 11.06,16.56L16.56,11.06C17.15,10.47 17.15,9.5 16.56,8.94Z"></path>
+                </svg>
+            </button>
+            <button id="format-toggle" title="切换时间格式 | Time Format | 時間形式">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"></path>
+                </svg>
+            </button>
+            <button id="theme-toggle" title="切换主题 | Theme | テーマ">
+                <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
+                    <path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"></path>
+                </svg>
+            </button>
+            <div class="dropdown" id="language-dropdown">
+                <button id="language-toggle" title="切换语言 | Language | 言語">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12.87,15.07L10.33,12.56L10.36,12.53C12.1,10.59 13.34,8.36 14.07,6H17V4H10V2H8V4H1V6H12.17C11.5,7.92 10.44,9.75 9,11.35C8.07,10.32 7.3,9.19 6.69,8H4.69C5.42,9.63 6.42,11.17 7.67,12.56L2.58,17.58L4,19L9,14L12.11,17.11L12.87,15.07M18.5,10H16.5L12,22H14L15.12,19H19.87L21,22H23L18.5,10M15.88,17L17.5,12.67L19.12,17H15.88Z"></path>
+                    </svg>
+                </button>
+                <div class="dropdown-content">
+                    <button data-lang="zh-cn">
+                        <span data-i18n="language-zh">中文</span>
+                    </button>
+                    <button data-lang="en">
+                        <span data-i18n="language-en">English</span>
+                    </button>
+                    <button data-lang="ja">
+                        <span data-i18n="language-ja">日本語</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="clock-card china">
+            <h2 class="country-name">
+                <img src="https://flagcdn.com/w40/cn.png" alt="中国国旗" class="flag-icon">
+                <span data-i18n="country-china">中国</span>
+            </h2>
+            <div class="time" id="china-time" style="display: none;">--:--:--</div>
+            <div class="time-container" id="china-time-container">
+                <div class="time-unit" id="china-hours">07</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="china-minutes">21</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="china-seconds">42</div>
+            </div>
+            <div class="date" id="china-date">----年--月--日</div>
+            <div class="timezone" id="china-timezone">GMT+8</div>
+        </div>
+        
+        <div class="clock-card japan">
+            <h2 class="country-name">
+                <img src="https://flagcdn.com/w40/jp.png" alt="日本国旗" class="flag-icon">
+                <span data-i18n="country-japan">日本</span>
+            </h2>
+            <div class="time" id="japan-time" style="display: none;">--:--:--</div>
+            <div class="time-container" id="japan-time-container">
+                <div class="time-unit" id="japan-hours">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="japan-minutes">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="japan-seconds">--</div>
+            </div>
+            <div class="date" id="japan-date">----年--月--日</div>
+            <div class="timezone" id="japan-timezone">GMT+9</div>
+        </div>
+        
+        <div class="clock-card usa">
+            <h2 class="country-name">
+                <img src="https://flagcdn.com/w40/us.png" alt="美国国旗" class="flag-icon">
+                <span data-i18n="country-usa">美国</span>
+            </h2>
+            <div class="time" id="usa-time" style="display: none;">--:--:--</div>
+            <div class="time-container" id="usa-time-container">
+                <div class="time-unit" id="usa-hours">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="usa-minutes">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="usa-seconds">--</div>
+            </div>
+            <div class="date" id="usa-date">----年--月--日</div>
+            <div class="timezone" id="usa-timezone">GMT-5</div>
+        </div>
+        
+        <div class="clock-card canada">
+            <h2 class="country-name">
+                <img src="https://flagcdn.com/w40/ca.png" alt="加拿大国旗" class="flag-icon">
+                <span data-i18n="country-canada">加拿大</span>
+            </h2>
+            <div class="time" id="canada-time" style="display: none;">--:--:--</div>
+            <div class="time-container" id="canada-time-container">
+                <div class="time-unit" id="canada-hours">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="canada-minutes">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="canada-seconds">--</div>
+            </div>
+            <div class="date" id="canada-date">----年--月--日</div>
+            <div class="timezone" id="canada-timezone">GMT-5</div>
+        </div>
+        
+        <div class="clock-card uk">
+            <h2 class="country-name">
+                <img src="https://flagcdn.com/w40/gb.png" alt="英国国旗" class="flag-icon">
+                <span data-i18n="country-uk">英国</span>
+            </h2>
+            <div class="time" id="uk-time" style="display: none;">--:--:--</div>
+            <div class="time-container" id="uk-time-container">
+                <div class="time-unit" id="uk-hours">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="uk-minutes">--</div>
+                <div class="time-separator">:</div>
+                <div class="time-unit" id="uk-seconds">--</div>
+            </div>
+            <div class="date" id="uk-date">----年--月--日</div>
+            <div class="timezone" id="uk-timezone">GMT+0</div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 dayjs 插件
+        dayjs.extend(window.dayjs_plugin_utc);
+        dayjs.extend(window.dayjs_plugin_timezone);
+        dayjs.extend(window.dayjs_plugin_localizedFormat);
+        
+        // 定义时区和语言设置
+        const timezones = {
+            'china': 'Asia/Shanghai',
+            'japan': 'Asia/Tokyo',
+            'usa': 'America/New_York',
+            'canada': 'America/Toronto',
+            'uk': 'Europe/London'
+        };
+        
+        // 翻译数据
+        const translations = {
+            'zh-cn': {
+                'title': '世界时钟',
+                'format-24h': '24小时制',
+                'format-12h': '12小时制',
+                'theme-dark': '暗黑模式',
+                'theme-light': '亮色模式',
+                'language-zh': '中文',
+                'language-en': 'English',
+                'language-ja': '日本語',
+                'country-china': '中国',
+                'country-japan': '日本',
+                'country-usa': '美国',
+                'country-canada': '加拿大',
+                'country-uk': '英国'
+            },
+            'en': {
+                'title': 'World Clock',
+                'format-24h': '24-hour',
+                'format-12h': '12-hour',
+                'theme-dark': 'Dark Mode',
+                'theme-light': 'Light Mode',
+                'language-zh': '中文',
+                'language-en': 'English',
+                'language-ja': '日本語',
+                'country-china': 'China',
+                'country-japan': 'Japan',
+                'country-usa': 'USA',
+                'country-canada': 'Canada',
+                'country-uk': 'UK'
+            },
+            'ja': {
+                'title': '世界時計',
+                'format-24h': '24時間',
+                'format-12h': '12時間',
+                'theme-dark': 'ダークモード',
+                'theme-light': 'ライトモード',
+                'language-zh': '中文',
+                'language-en': 'English',
+                'language-ja': '日本語',
+                'country-china': '中国',
+                'country-japan': '日本',
+                'country-usa': 'アメリカ',
+                'country-canada': 'カナダ',
+                'country-uk': 'イギリス'
+            }
+        };
+        
+        // 应用程序状态
+        const appState = {
+            language: 'zh-cn',
+            is24Hour: true,
+            isDarkMode: false,
+            updateInterval: null
+        };
+        
+        // DOM 元素
+        const bgToggle = document.getElementById('bg-toggle');
+        const formatToggle = document.getElementById('format-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const languageToggle = document.getElementById('language-toggle');
+        const languageDropdown = document.getElementById('language-dropdown');
+        const languageButtons = document.querySelectorAll('[data-lang]');
+        
+        // 函数：更新时间显示
+        function updateTimes() {
+            const countries = ['china', 'japan', 'usa', 'canada', 'uk'];
+            
+            countries.forEach(country => {
+                const now = dayjs().tz(timezones[country]);
+                
+                // 获取时间单元
+                const hours = now.format(appState.is24Hour ? 'HH' : 'hh');
+                const minutes = now.format('mm');
+                const seconds = now.format('ss');
+                const ampm = now.format('A');
+                
+                // 获取时间单元元素
+                const hoursEl = document.getElementById(`${country}-hours`);
+                const minutesEl = document.getElementById(`${country}-minutes`);
+                const secondsEl = document.getElementById(`${country}-seconds`);
+                
+                // 检查各个时间单元是否发生变化，并更新
+                if (hoursEl.textContent !== hours) {
+                    hoursEl.textContent = hours;
+                    hoursEl.classList.add('update');
+                    setTimeout(() => {
+                        hoursEl.classList.remove('update');
+                    }, 500);
+                }
+                
+                if (minutesEl.textContent !== minutes) {
+                    minutesEl.textContent = minutes;
+                    minutesEl.classList.add('update');
+                    setTimeout(() => {
+                        minutesEl.classList.remove('update');
+                    }, 500);
+                }
+                
+                if (secondsEl.textContent !== seconds) {
+                    secondsEl.textContent = seconds;
+                    secondsEl.classList.add('update');
+                    setTimeout(() => {
+                        secondsEl.classList.remove('update');
+                    }, 500);
+                }
+                
+                // 保持旧的时间元素更新，虽然已隐藏（为了保持兼容性）
+                const timeElement = document.getElementById(`${country}-time`);
+                const timeFormat = appState.is24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
+                timeElement.textContent = now.format(timeFormat);
+                
+                // 日期格式根据语言设置
+                let dateFormat;
+                if (appState.language === 'zh-cn') {
+                    dateFormat = 'YYYY年MM月DD日 dddd';
+                } else if (appState.language === 'ja') {
+                    dateFormat = 'YYYY年MM月DD日 dddd';
+                } else {
+                    dateFormat = 'dddd, MMMM D, YYYY';
+                }
+                
+                // 设置日期语言
+                const localizedNow = now.locale(appState.language);
+                document.getElementById(`${country}-date`).textContent = localizedNow.format(dateFormat);
+                
+                // 设置时区信息
+                const offset = now.format('Z');
+                document.getElementById(`${country}-timezone`).textContent = `GMT${offset}`;
+            });
+        }
+        
+        // 函数：更新翻译
+        function updateTranslations() {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[appState.language][key]) {
+                    element.textContent = translations[appState.language][key];
+                }
+            });
+            
+            // 更新标题
+            document.title = `${translations[appState.language]['title']}`;
+            document.querySelector('.logo').textContent = translations[appState.language]['title'];
+            
+            dayjs.locale(appState.language);
+            updateTimes();
+        }
+        
+        // 函数：切换时间格式
+        function toggleTimeFormat() {
+            appState.is24Hour = !appState.is24Hour;
+            updateTimes();
+        }
+        
+        // 函数：切换主题
+        function toggleTheme() {
+            appState.isDarkMode = !appState.isDarkMode;
+            document.body.setAttribute('data-theme', appState.isDarkMode ? 'dark' : 'light');
+            
+            // 更新图标
+            if (appState.isDarkMode) {
+                themeIcon.innerHTML = '<path d="M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"></path>';
+            } else {
+                themeIcon.innerHTML = '<path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"></path>';
+            }
+            
+            // 重新生成图标背景
+            const buttonBgs = document.querySelectorAll('.button-bg');
+            buttonBgs.forEach(bg => bg.remove());
+            generateIconGradients();
+        }
+        
+        // 函数：切换语言
+        function setLanguage(lang) {
+            appState.language = lang;
+            updateTranslations();
+            languageDropdown.classList.remove('active');
+            
+            // 检查是否有新添加的按钮需要背景
+            setTimeout(() => {
+                generateIconGradients();
+            }, 100);
+        }
+        
+        // 函数：切换语言下拉菜单的显示/隐藏
+        function toggleLanguageDropdown() {
+            languageDropdown.classList.toggle('active');
+            
+            // 确保下拉菜单中的按钮也有背景
+            if (languageDropdown.classList.contains('active')) {
+                setTimeout(() => {
+                    generateIconGradients();
+                }, 10);
+            }
+        }
+        
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            if (!languageDropdown.contains(event.target)) {
+                languageDropdown.classList.remove('active');
+            }
+        });
+        
+        // 生成随机柔和渐变背景色函数
+        function generateSoftGradient() {
+            // 添加过渡动画类
+            document.body.classList.add('bg-transition');
+            setTimeout(() => {
+                document.body.classList.remove('bg-transition');
+            }, 1000);
+            
+            // 柔和的颜色范围 - 使用柔和的颜色组合
+            const softColors = [
+                { light: ['#E0F7FA', '#B2EBF2', '#80DEEA', '#4DD0E1'], dark: ['#006064', '#00838F', '#0097A7', '#00ACC1'] }, // 蓝绿色系
+                { light: ['#F1F8E9', '#DCEDC8', '#C5E1A5', '#AED581'], dark: ['#33691E', '#558B2F', '#689F38', '#7CB342'] }, // 绿色系
+                { light: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D'], dark: ['#E65100', '#EF6C00', '#F57C00', '#FB8C00'] }, // 橙色系
+                { light: ['#E8EAF6', '#C5CAE9', '#9FA8DA', '#7986CB'], dark: ['#1A237E', '#283593', '#303F9F', '#3949AB'] }, // 靛蓝色系
+                { light: ['#F3E5F5', '#E1BEE7', '#CE93D8', '#BA68C8'], dark: ['#4A148C', '#6A1B9A', '#7B1FA2', '#8E24AA'] }, // 紫色系
+                { light: ['#E1F5FE', '#B3E5FC', '#81D4FA', '#4FC3F7'], dark: ['#01579B', '#0277BD', '#0288D1', '#039BE5'] }, // 浅蓝色系
+                { light: ['#E0F2F1', '#B2DFDB', '#80CBC4', '#4DB6AC'], dark: ['#004D40', '#00695C', '#00796B', '#00897B'] }, // 水鸭绿系
+                { light: ['#F1F8E9', '#DCEDC8', '#C5E1A5', '#AED581'], dark: ['#1B5E20', '#2E7D32', '#388E3C', '#43A047'] }  // 薄荷绿系
+            ];
+            
+            // 渐变类型
+            const gradientTypes = [
+                (angle, color1, color2) => `linear-gradient(${angle}deg, ${color1}, ${color2})`,
+                (angle, color1, color2) => `linear-gradient(${angle}deg, ${color1}, ${color2} 50%, ${color1})`,
+                (angle, color1, color2) => `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 50%, ${color1} 100%)`,
+                (angle, color1, color2, color3) => `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 50%, ${color3} 100%)`,
+                (angle, color1, color2) => `radial-gradient(circle at ${Math.random() > 0.5 ? 'top' : 'bottom'} ${Math.random() > 0.5 ? 'left' : 'right'}, ${color1}, ${color2})`
+            ];
+            
+            // 随机选择一个颜色系列
+            const colorSet = softColors[Math.floor(Math.random() * softColors.length)];
+            const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+            const colors = isDarkMode ? colorSet.dark : colorSet.light;
+            
+            // 从颜色系列中随机选择两个或三个颜色
+            const color1 = colors[Math.floor(Math.random() * colors.length)];
+            let color2 = colors[Math.floor(Math.random() * colors.length)];
+            let color3 = colors[Math.floor(Math.random() * colors.length)];
+            
+            // 确保颜色不同
+            while (color1 === color2) {
+                color2 = colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            while (color3 === color1 || color3 === color2) {
+                color3 = colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            // 随机角度
+            const angle = Math.floor(Math.random() * 360);
+            
+            // 随机选择渐变类型
+            const gradientTypeIndex = Math.floor(Math.random() * gradientTypes.length);
+            const gradient = gradientTypes[gradientTypeIndex](angle, color1, color2, color3);
+            
+            // 应用到背景
+            document.body.style.background = gradient;
+            
+            // 更新时间单元颜色以匹配渐变
+            updateTimeUnitColors(color1, color2);
+            
+            // 保存当前背景，以便在需要时恢复
+            localStorage.setItem('lastBackground', gradient);
+            localStorage.setItem('lastTimeUnitColor', document.querySelector('.time-unit').style.backgroundColor);
+            localStorage.setItem('lastTimeSeparatorColor', document.querySelector('.time-separator').style.color);
+        }
+        
+        // 更新时间单元的颜色
+        function updateTimeUnitColors(color1, color2) {
+            // 提取颜色中的蓝色部分作为时间单元的背景色
+            // 这是一个简单的算法，您可以根据需要调整
+            const timeUnitBgColor = document.body.getAttribute('data-theme') === 'dark' 
+                ? lightenDarkenColor(color2, 20)  // 暗色模式下稍微亮一点
+                : darkenColor(color1, 30);       // 亮色模式下稍微暗一点
+            
+            // 应用到所有时间单元
+            const timeUnits = document.querySelectorAll('.time-unit');
+            const timeSeparators = document.querySelectorAll('.time-separator');
+            
+            timeUnits.forEach(unit => {
+                unit.style.backgroundColor = timeUnitBgColor;
+                unit.style.color = 'white'; // 确保文字颜色是白色，以便良好的对比度
+            });
+            
+            timeSeparators.forEach(separator => {
+                separator.style.color = timeUnitBgColor;
+            });
+        }
+        
+        // 辅助函数：使颜色更亮或更暗
+        function lightenDarkenColor(col, amt) {
+            let usePound = false;
+            if (col[0] === "#") {
+                col = col.slice(1);
+                usePound = true;
+            }
+         
+            const num = parseInt(col, 16);
+            let r = (num >> 16) + amt;
+            r = Math.max(Math.min(255, r), 0);
+            let g = ((num >> 8) & 0x00FF) + amt;
+            g = Math.max(Math.min(255, g), 0);
+            let b = (num & 0x0000FF) + amt;
+            b = Math.max(Math.min(255, b), 0);
+            
+            return (usePound ? "#" : "") + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+        }
+        
+        // 辅助函数：使颜色更暗
+        function darkenColor(col, amt) {
+            return lightenDarkenColor(col, -amt);
+        }
+        
+        // 生成随机图标背景
+        function generateIconGradients() {
+            const buttons = document.querySelectorAll('button');
+            
+            buttons.forEach(button => {
+                // 如果按钮已经有背景，则跳过
+                if (button.querySelector('.button-bg')) return;
+                
+                // 创建背景元素
+                const bgDiv = document.createElement('div');
+                bgDiv.className = 'button-bg';
+                
+                // 生成柔和渐变色
+                const gradient = generateIconGradient();
+                bgDiv.style.background = gradient;
+                
+                // 将背景元素插入到按钮中
+                button.insertBefore(bgDiv, button.firstChild);
+            });
+        }
+        
+        // 为图标生成柔和渐变色
+        function generateIconGradient() {
+            // 柔和的颜色组合 - 针对浅色和深色主题有不同的组合
+            const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+            
+            const iconColors = isDarkMode ? [
+                ['#0277BD', '#039BE5'], // 深蓝
+                ['#00838F', '#00ACC1'], // 深青
+                ['#2E7D32', '#43A047'], // 深绿
+                ['#558B2F', '#7CB342'], // 橄榄绿
+                ['#F57F17', '#FBC02D'], // 琥珀
+                ['#EF6C00', '#FB8C00'], // 深橙
+                ['#C2185B', '#E91E63'], // 玫红
+                ['#7B1FA2', '#9C27B0'], // 深紫
+                ['#512DA8', '#673AB7'], // 深紫罗兰
+                ['#303F9F', '#3F51B5']  // 深靛蓝
+            ] : [
+                ['#E1F5FE', '#81D4FA'], // 浅蓝
+                ['#E0F7FA', '#80DEEA'], // 蓝绿
+                ['#E8F5E9', '#A5D6A7'], // 浅绿
+                ['#F1F8E9', '#C5E1A5'], // 黄绿
+                ['#FFF8E1', '#FFE082'], // 淡黄
+                ['#FFF3E0', '#FFCC80'], // 橙黄
+                ['#FCE4EC', '#F8BBD0'], // 粉
+                ['#F3E5F5', '#CE93D8'], // 淡紫
+                ['#EDE7F6', '#B39DDB'], // 薰衣草
+                ['#E8EAF6', '#9FA8DA']  // 靛蓝
+            ];
+            
+            // 随机选择一个颜色组合
+            const colorPair = iconColors[Math.floor(Math.random() * iconColors.length)];
+            
+            // 随机角度
+            const angle = Math.floor(Math.random() * 360);
+            
+            // 根据形状选择不同的渐变类型
+            const gradientTypes = [
+                `linear-gradient(${angle}deg, ${colorPair[0]}, ${colorPair[1]})`,
+                `radial-gradient(circle, ${colorPair[0]} 0%, ${colorPair[1]} 100%)`,
+                `linear-gradient(${angle}deg, ${colorPair[0]} 0%, ${colorPair[1]} 50%, ${colorPair[0]} 100%)`
+            ];
+            
+            return gradientTypes[Math.floor(Math.random() * gradientTypes.length)];
+        }
+        
+        // 添加窗口大小变化时重新生成背景的功能
+        window.addEventListener('resize', function() {
+            // 检查是否有新添加的按钮需要背景
+            setTimeout(() => {
+                generateIconGradients();
+            }, 100);
+        });
+        
+        // 初始化应用
+        function initApp() {
+            // 设置事件监听器
+            bgToggle.addEventListener('click', function() {
+                generateSoftGradient();
+                // 点击效果
+                this.classList.add('clicked');
+                setTimeout(() => {
+                    this.classList.remove('clicked');
+                }, 300);
+            });
+            
+            formatToggle.addEventListener('click', function() {
+                toggleTimeFormat();
+                // 点击效果
+                this.classList.add('clicked');
+                setTimeout(() => {
+                    this.classList.remove('clicked');
+                }, 300);
+            });
+            
+            themeToggle.addEventListener('click', function() {
+                toggleTheme();
+                // 切换主题时更新渐变背景
+                generateSoftGradient();
+                // 点击效果
+                this.classList.add('clicked');
+                setTimeout(() => {
+                    this.classList.remove('clicked');
+                }, 300);
+            });
+            
+            languageToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleLanguageDropdown();
+                // 点击效果
+                this.classList.add('clicked');
+                setTimeout(() => {
+                    this.classList.remove('clicked');
+                }, 300);
+            });
+            
+            // 语言切换按钮
+            languageButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    setLanguage(this.getAttribute('data-lang'));
+                });
+            });
+            
+            // 生成图标的随机背景
+            generateIconGradients();
+            
+            // 尝试恢复上次的背景设置，如果没有则生成新的
+            const lastBackground = localStorage.getItem('lastBackground');
+            const lastTimeUnitColor = localStorage.getItem('lastTimeUnitColor');
+            const lastTimeSeparatorColor = localStorage.getItem('lastTimeSeparatorColor');
+            
+            if (lastBackground && lastTimeUnitColor && lastTimeSeparatorColor) {
+                document.body.style.background = lastBackground;
+                
+                const timeUnits = document.querySelectorAll('.time-unit');
+                const timeSeparators = document.querySelectorAll('.time-separator');
+                
+                timeUnits.forEach(unit => {
+                    unit.style.backgroundColor = lastTimeUnitColor;
+                    unit.style.color = 'white';
+                });
+                
+                timeSeparators.forEach(separator => {
+                    separator.style.color = lastTimeSeparatorColor;
+                });
+            } else {
+                // 生成柔和渐变背景
+                generateSoftGradient();
+            }
+            
+            // 初始更新
+            updateTranslations();
+            
+            // 设置定时更新
+            appState.updateInterval = setInterval(updateTimes, 1000);
+            
+            // 检查系统暗黑模式偏好并自动应用
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleTheme();
+                generateSoftGradient(); // 重新生成暗色主题的背景
+            }
+        }
+        
+        // 启动应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html> 
