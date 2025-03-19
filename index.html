@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI在线工具集</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png">
+    <link rel="manifest" href="./assets/site.webmanifest">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
     <style>
         :root {
@@ -217,6 +222,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="header-content">
@@ -302,45 +308,46 @@
 
     <script>
         // 为每个tool-icon生成随机渐变背景色
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 获取所有tool-icon元素
             const toolIcons = document.querySelectorAll('.tool-icon');
-            
+
             // 为每个元素设置随机背景色
             toolIcons.forEach(icon => {
                 // 生成随机的、不刺眼的渐变背景色
                 const gradient = generatePleasantGradient();
                 icon.style.background = gradient;
             });
-            
+
             // 生成柔和的渐变背景色函数
             function generatePleasantGradient() {
                 // 生成柔和颜色的HSL值范围
                 // 色相: 完整范围 0-360
                 // 饱和度: 30%-70% 避免过于灰暗或过于鲜艳
                 // 亮度: 40%-75% 避免过暗或过亮
-                
+
                 // 生成第一个颜色
                 const hue1 = Math.floor(Math.random() * 360);
                 const saturation1 = Math.floor(30 + Math.random() * 40);
                 const lightness1 = Math.floor(40 + Math.random() * 35);
-                
+
                 // 生成第二个颜色 (与第一个颜色相差30-90度的色相，确保渐变和谐)
                 const hueDiff = 30 + Math.floor(Math.random() * 60);
                 const hue2 = (hue1 + hueDiff) % 360;
                 const saturation2 = Math.floor(30 + Math.random() * 40);
                 const lightness2 = Math.floor(40 + Math.random() * 35);
-                
+
                 // 构造渐变字符串
                 const color1 = `hsl(${hue1}, ${saturation1}%, ${lightness1}%)`;
                 const color2 = `hsl(${hue2}, ${saturation2}%, ${lightness2}%)`;
-                
+
                 // 随机角度的渐变
                 const angle = Math.floor(Math.random() * 360);
-                
+
                 return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
             }
         });
     </script>
 </body>
+
 </html>
